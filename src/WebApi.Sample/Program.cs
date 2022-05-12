@@ -2,9 +2,11 @@ using MediatR;
 using Microsoft.AspNetCore.OData;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.OData.Edm;
 using Microsoft.OData.ModelBuilder;
 using WebApi.Sample.Db;
+using WebApi.Sample.Midlewares;
 using WebApi.Sample.Models.V1;
 
 static IEdmModel GetEdmModel()
@@ -28,6 +30,8 @@ builder.Services.AddSwaggerGen(c =>
 });
 builder.Services.AddApiVersioning();
 builder.Services.AddMediatR(typeof(Program).Assembly);
+builder.Services.TryAddSingleton<IHttpContextAccessor,HttpContextAccessor>();
+builder.Services.AddHealthChecks();
 
 //var connectionString = "Data Source=InMemorySample;Mode=Memory;Cache=Shared";
 var connectionString = "DataSource=:memory:";
@@ -54,5 +58,9 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
-
+app.UseMiddleware<ExceptionMiddleware>();
+app.UseHttpLogging();
+app.MapHealthChecks("/HealthCheck");
 app.Run();
+
+
